@@ -1,3 +1,13 @@
+use crate::brainfuck::BrainfuckRust;
+
+pub mod brainfuck;
+
 fn main() {
-    println!("Hello, world!");
+    let src = r"#
+    ++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>
+    ---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++. hello world
+        #";
+
+    let mut interpreter = BrainfuckRust::new(src);
+    interpreter.run()
 }
