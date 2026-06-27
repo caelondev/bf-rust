@@ -1,21 +1,47 @@
 use std::io::{self, Read, Write};
 
+pub mod wasm;
+
 pub struct BrainfuckRust {
     source: Vec<char>,
     tape: Vec<u8>,
     pc: usize,
     cursor: usize,
     loop_stack: Vec<usize>,
+    write_fn: Box<dyn FnMut(char)>,
+    read_fn: Box<dyn FnMut() -> u8>,
 }
 
 impl BrainfuckRust {
     pub fn new(src: &str) -> Self {
+        Self::with_io(
+            src,
+            |ch| print!("{ch}"),
+            || {
+                io::stdout().flush().ok();
+
+                let mut buf = [0u8; 1];
+                match io::stdin().read_exact(&mut buf) {
+                    Ok(()) => buf[0],
+                    Err(_) => 0, // EOF or read error -> convention: set to 0
+                }
+            },
+        )
+    }
+
+    pub fn with_io(
+        src: &str,
+        write_fn: impl FnMut(char) + 'static,
+        read_fn: impl FnMut() -> u8 + 'static,
+    ) -> Self {
         Self {
             source: src.chars().collect(),
             tape: vec![0u8; 256],
             pc: 0,
             cursor: 0,
             loop_stack: Vec::new(),
+            write_fn: Box::new(write_fn),
+            read_fn: Box::new(read_fn),
         }
     }
 
@@ -74,17 +100,11 @@ impl BrainfuckRust {
                 }
                 '.' => {
                     let ch = self.tape[self.cursor] as char;
-                    print!("{ch}");
+                    (self.write_fn)(ch);
                 }
 
                 ',' => {
-                    io::stdout().flush().ok();
-
-                    let mut buf = [0u8; 1];
-                    match io::stdin().read_exact(&mut buf) {
-                        Ok(()) => self.tape[self.cursor] = buf[0],
-                        Err(_) => self.tape[self.cursor] = 0,
-                    }
+                    self.tape[self.cursor] = (self.read_fn)();
                 }
                 _ => unreachable!("source is always clean unless lexer messed up"),
             };
