@@ -4,10 +4,10 @@ pub mod brainfuck;
 
 fn main() {
     let src = r"#
-    ++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>
-    ---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++. hello world
+    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++.> A
+    ++++++++++. \n
         #";
 
     let mut interpreter = BrainfuckRust::new(src);
-    interpreter.run()
+    interpreter.run().unwrap()
 }

@@ -1,5 +1,3 @@
-use std::io::Stdin;
-
 pub struct BrainfuckRust {
     source: Vec<char>,
     tape: Vec<u8>,
@@ -10,7 +8,7 @@ impl BrainfuckRust {
     pub fn new(src: &str) -> Self {
         Self {
             source: src.chars().collect(),
-            tape: Vec::new(),
+            tape: vec![0u8; 256],
             cursor: 0,
         }
     }
@@ -21,10 +19,10 @@ impl BrainfuckRust {
         for inst in instructions {
             match inst {
                 '+' => {
-                    self.tape[self.cursor].wrapping_add(1);
+                    self.tape[self.cursor] = self.tape[self.cursor].wrapping_add(1);
                 }
                 '-' => {
-                    self.tape[self.cursor].wrapping_sub(1);
+                    self.tape[self.cursor] = self.tape[self.cursor].wrapping_sub(1);
                 }
                 '>' => {
                     self.right();
@@ -34,7 +32,10 @@ impl BrainfuckRust {
                 }
                 // '[' => {}
                 // ']' => {}
-                // '.' => {}
+                '.' => {
+                    let ch = self.tape[self.cursor] as char;
+                    print!("{ch}");
+                }
                 // ',' => {}
                 _ => unreachable!("source is always clean unless lexer messed up"),
             };
