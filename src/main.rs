@@ -4,10 +4,13 @@ pub mod brainfuck;
 
 fn main() {
     let src = r"#
-    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++.> A
-    ++++++++++. \n
+    ,.> ask input, print and goto next tape
+    ++++++++++. newline
         #";
 
     let mut interpreter = BrainfuckRust::new(src);
-    interpreter.run().unwrap()
+    match interpreter.run() {
+        Ok(()) => {}
+        Err(e) => eprintln!("Error: {e}"),
+    }
 }
