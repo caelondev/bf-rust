@@ -1,3 +1,5 @@
+use std::io::Stdin;
+
 pub struct BrainfuckRust {
     source: Vec<char>,
     tape: Vec<u8>,
@@ -13,8 +15,32 @@ impl BrainfuckRust {
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> Result<(), String> {
         let instructions = self.clean_source();
+
+        for inst in instructions {
+            match inst {
+                '+' => {
+                    self.tape[self.cursor].wrapping_add(1);
+                }
+                '-' => {
+                    self.tape[self.cursor].wrapping_sub(1);
+                }
+                '>' => {
+                    self.right();
+                }
+                '<' => {
+                    self.left()?;
+                }
+                // '[' => {}
+                // ']' => {}
+                // '.' => {}
+                // ',' => {}
+                _ => unreachable!("source is always clean unless lexer messed up"),
+            };
+        }
+
+        Ok(())
     }
 
     fn clean_source(&self) -> Vec<char> {
@@ -30,10 +56,20 @@ impl BrainfuckRust {
         chars
     }
 
-    fn left(&mut self) {
+    fn right(&mut self) {
+        self.cursor += 1;
+
         if self.cursor >= self.tape.len() {
-            let 
             self.tape.resize(self.cursor + 1, 0);
         }
+    }
+
+    fn left(&mut self) -> Result<(), String> {
+        if self.cursor == 0 {
+            return Err("Tape underflow".into());
+        }
+
+        self.cursor -= 1;
+        Ok(())
     }
 }
