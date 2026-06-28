@@ -35,7 +35,13 @@ impl Brainfuck {
         }
     }
 
-    pub fn run(&mut self) -> Result<(), String> {
-        self.bf.run()
+    pub fn compile(&mut self) -> Result<JsValue, JsValue> {
+        serde_wasm_bindgen::to_value(&self.bf.compile()).map_err(|e| e.to_string().into())
+    }
+
+    pub fn run(&mut self, instructions: JsValue) -> Result<(), String> {
+        let instructions: Vec<(char, u8)> =
+            serde_wasm_bindgen::from_value(instructions).map_err(|e| e.to_string())?;
+        self.bf.run(instructions)
     }
 }

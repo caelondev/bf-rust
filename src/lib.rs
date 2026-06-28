@@ -23,7 +23,7 @@ impl BrainfuckRust {
                 let mut buf = [0u8; 1];
                 match io::stdin().read_exact(&mut buf) {
                     Ok(()) => buf[0],
-                    Err(_) => 0, // EOF or read error -> convention: set to 0
+                    Err(_) => 0, // EOF or read error
                 }
             },
         )
@@ -45,10 +45,12 @@ impl BrainfuckRust {
         }
     }
 
-    pub fn run(&mut self) -> Result<(), String> {
+    pub fn compile(&self) -> Vec<(char, u8)> {
         let tokens = self.clean_source();
-        let instructions = self.compress_tokens(tokens);
+        self.compress_tokens(tokens)
+    }
 
+    pub fn run(&mut self, instructions: Vec<(char, u8)>) -> Result<(), String> {
         while self.pc < instructions.len() {
             let inst: (char, u8) = instructions[self.pc];
             match inst {
