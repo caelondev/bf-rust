@@ -30,8 +30,21 @@ fn main() {
         }
 
         if args[1] == "run" {
-            // TODO: This is for reading from a file
-            // but im too lazy to implement it today
+            if args.len() < 3 {
+                printerr("no filepath given");
+            }
+
+            let src = match fs::read_to_string(&args[2]) {
+                Ok(s) => s,
+                Err(e) => printerr(&e.to_string()),
+            };
+
+            let mut interpreter = BrainfuckRust::new(&src);
+            let instructions: Vec<(char, u8)> = interpreter.compile();
+            match interpreter.run(instructions) {
+                Ok(()) => {}
+                Err(e) => printerr(&e),
+            }
             return;
         }
     }
