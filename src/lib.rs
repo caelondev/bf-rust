@@ -46,24 +46,25 @@ impl BrainfuckRust {
     }
 
     pub fn run(&mut self) -> Result<(), String> {
-        let instructions = self.clean_source();
+        let tokens = self.clean_source();
+        let instructions = self.compress_tokens(tokens);
 
         while self.pc < instructions.len() {
-            let inst = instructions[self.pc];
+            let inst: (char, u8) = instructions[self.pc];
             match inst {
-                '+' => {
-                    self.tape[self.cursor] = self.tape[self.cursor].wrapping_add(1);
+                ('+', c) => {
+                    self.tape[self.cursor] = self.tape[self.cursor].wrapping_add(c);
                 }
-                '-' => {
-                    self.tape[self.cursor] = self.tape[self.cursor].wrapping_sub(1);
+                ('-', c) => {
+                    self.tape[self.cursor] = self.tape[self.cursor].wrapping_sub(c);
                 }
-                '>' => {
-                    self.right();
+                ('>', c) => {
+                    self.right(c);
                 }
-                '<' => {
-                    self.left()?;
+                ('<', c) => {
+                    self.left(c)?;
                 }
-                '[' => {
+                ('[', _) => {
                     if self.tape[self.cursor] == 0 {
                         let start = self.pc + 1;
                         let mut depth = 1;
@@ -75,8 +76,8 @@ impl BrainfuckRust {
                                 ));
                             }
                             match instructions[self.pc] {
-                                '[' => depth += 1,
-                                ']' => depth -= 1,
+                                ('[', _) => depth += 1,
+                                (']', _) => depth -= 1,
                                 _ => {}
                             }
                         }
@@ -84,7 +85,7 @@ impl BrainfuckRust {
                         self.loop_stack.push(self.pc);
                     }
                 }
-                ']' => {
+                (']', _) => {
                     if self.loop_stack.is_empty() {
                         return Err(format!(
                             "Unmatched closing bracket at instruction {}",
@@ -98,12 +99,12 @@ impl BrainfuckRust {
                         self.loop_stack.pop();
                     }
                 }
-                '.' => {
+                ('.', _) => {
                     let ch = self.tape[self.cursor] as char;
                     (self.write_fn)(ch);
                 }
 
-                ',' => {
+                (',', _) => {
                     self.tape[self.cursor] = (self.read_fn)();
                 }
                 _ => unreachable!("source is always clean unless lexer messed up"),
@@ -135,20 +136,39 @@ impl BrainfuckRust {
         chars
     }
 
-    fn right(&mut self) {
-        self.cursor += 1;
+    fn compress_tokens(&self, tokens: Vec<char>) -> Vec<(char, u8)> {
+        let mut rle_tokens = Vec::new();
+
+        for token in tokens {
+            if matches!(token, '<' | '>' | '+' | '-') {
+                if let Some((last_token, count)) = rle_tokens.last_mut() {
+                    if *last_token == token {
+                        *count += 1;
+                        continue;
+                    }
+                }
+            }
+
+            rle_tokens.push((token, 1));
+        }
+
+        rle_tokens
+    }
+
+    fn right(&mut self, count: u8) {
+        self.cursor += count as usize;
 
         if self.cursor >= self.tape.len() {
             self.tape.resize(self.cursor + 1, 0);
         }
     }
 
-    fn left(&mut self) -> Result<(), String> {
+    fn left(&mut self, count: u8) -> Result<(), String> {
         if self.cursor == 0 {
             return Err("Tape underflow".into());
         }
 
-        self.cursor -= 1;
+        self.cursor -= count as usize;
         Ok(())
     }
 }

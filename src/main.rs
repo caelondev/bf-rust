@@ -25,7 +25,7 @@ fn main() {
         let mut interpreter = BrainfuckRust::new(&src);
         match interpreter.run() {
             Ok(()) => {}
-            Err(e) => eprintln!("{e}"),
+            Err(e) => eprintln!("error: {e}"),
         }
     }
 }
