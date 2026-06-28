@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
 
-use crate::BrainfuckRust;
+use crate::{BrainfuckRust, Op};
 
 #[wasm_bindgen]
 unsafe extern "C" {
@@ -36,12 +36,13 @@ impl Brainfuck {
     }
 
     pub fn compile(&mut self) -> Result<JsValue, JsValue> {
-        serde_wasm_bindgen::to_value(&self.bf.compile()).map_err(|e| e.to_string().into())
+        let ops = self.bf.compile().map_err(|e| JsValue::from_str(&e))?;
+        serde_wasm_bindgen::to_value(&ops).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     pub fn run(&mut self, instructions: JsValue) -> Result<(), String> {
-        let instructions: Vec<(char, u8)> =
+        let instructions: Vec<Op> =
             serde_wasm_bindgen::from_value(instructions).map_err(|e| e.to_string())?;
-        self.bf.run(instructions)
+        self.bf.run(&instructions)
     }
 }

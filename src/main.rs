@@ -21,10 +21,13 @@ fn main() {
                 Err(e) => printerr(&e.to_string()),
             };
             let interpreter = BrainfuckRust::new(&src);
-            let instructions: Vec<(char, u8)> = interpreter.compile();
+            let instructions = match interpreter.compile() {
+                Ok(ops) => ops,
+                Err(e) => printerr(&e),
+            };
 
             for inst in instructions {
-                println!("{} :\t{}", inst.0, inst.1)
+                println!("{inst:?}");
             }
             return;
         }
@@ -40,8 +43,11 @@ fn main() {
             };
 
             let mut interpreter = BrainfuckRust::new(&src);
-            let instructions: Vec<(char, u8)> = interpreter.compile();
-            match interpreter.run(instructions) {
+            let instructions = match interpreter.compile() {
+                Ok(ops) => ops,
+                Err(e) => printerr(&e),
+            };
+            match interpreter.run(&instructions) {
                 Ok(()) => {}
                 Err(e) => printerr(&e),
             }
@@ -58,10 +64,16 @@ fn main() {
         io::stdin().read_line(&mut src).expect("Cannot read stdin");
 
         let mut interpreter = BrainfuckRust::new(&src);
-        let instructions: Vec<(char, u8)> = interpreter.compile();
-        match interpreter.run(instructions) {
+        let instructions = match interpreter.compile() {
+            Ok(ops) => ops,
+            Err(e) => {
+                eprintln!("error: {e}");
+                continue;
+            }
+        };
+        match interpreter.run(&instructions) {
             Ok(()) => {}
-            Err(e) => printerr(&e),
+            Err(e) => eprintln!("error: {e}"),
         }
     }
 }
